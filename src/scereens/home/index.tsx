@@ -45,10 +45,11 @@ export default function Home() {
   }, [reset]);
 
   useEffect(() => {
+    console.log(results);
     const canvas = canvasRef.current;
-    
+
     if (canvas) {
-      canvas.style.background = "black"; 
+      canvas.style.background = "black";
       const ctx = canvas.getContext("2d");
       if (ctx) {
         canvas.width = window.innerWidth;
@@ -140,7 +141,7 @@ export default function Home() {
       });
 
       const resp = await response.data;
-      
+
       // Clear previous results and latex expressions
       resetCanvas();
       setResults([]);
@@ -154,11 +155,11 @@ export default function Home() {
             [data.expr]: data.result,
           }));
         }
-        
+
         // Add each response as a new result
         setResults((prevResults) => [
           ...prevResults,
-          { expression: data.expr, answer: data.result }
+          { expression: data.expr, answer: data.result },
         ]);
 
         // Render each response on the canvas as LaTeX
@@ -236,7 +237,10 @@ export default function Home() {
         <Draggable
           key={index}
           defaultPosition={latexPosition}
-          onStop={(e, data) => setLatexPosition({ x: data.x, y: data.y })}
+          onStop={(e, data) => {
+            console.log(e.target);
+            return setLatexPosition({ x: data.x, y: data.y });
+          }}
         >
           <div className="absolute p-2 text-white rounded shadow-md">
             <div className="latex-content">{latex}</div>
