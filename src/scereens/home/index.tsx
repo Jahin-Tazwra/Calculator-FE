@@ -81,6 +81,28 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      // Prevent pull-to-refresh on mobile
+      const preventPullToRefresh = (e: TouchEvent) => {
+        if (e.touches.length === 1) e.preventDefault();
+      };
+
+      canvas.addEventListener("touchstart", preventPullToRefresh, {
+        passive: false,
+      });
+      canvas.addEventListener("touchmove", preventPullToRefresh, {
+        passive: false,
+      });
+
+      return () => {
+        canvas.removeEventListener("touchstart", preventPullToRefresh);
+        canvas.removeEventListener("touchmove", preventPullToRefresh);
+      };
+    }
+  }, []);
+
   const renderLatexToCanvas = (expression: string, answer: string) => {
     const latex = `\\(\\LARGE{${expression} = ${answer}}\\)`;
     setLatexExpressions((prevExpressions) => [...prevExpressions, latex]);
@@ -164,12 +186,10 @@ export default function Home() {
 
       const resp = await response.data;
 
-      // Clear previous results and latex expressions
       resetCanvas();
       setResults([]);
       setLatexExpressions([]);
 
-      // Loop through each response item and update both results and dictOfVars
       resp.data.forEach((data: Response) => {
         if (data.assign === true) {
           setDictOfVars((prevDict) => ({
@@ -178,13 +198,11 @@ export default function Home() {
           }));
         }
 
-        // Add each response as a new result
         setResults((prevResults) => [
           ...prevResults,
           { expression: data.expr, answer: data.result },
         ]);
 
-        // Render each response on the canvas as LaTeX
         renderLatexToCanvas(data.expr, data.result);
       });
 
@@ -199,7 +217,6 @@ export default function Home() {
         for (let x = 0; x < canvas.width; x++) {
           const i = (y * canvas.width + x) * 4;
           if (imageData.data[i + 3] > 0) {
-            // If pixel is not transparent
             minX = Math.min(minX, x);
             minY = Math.min(minY, y);
             maxX = Math.max(maxX, x);
@@ -221,7 +238,7 @@ export default function Home() {
         <Button
           onClick={() => setReset(true)}
           className="z-20 bg-black text-white"
-          variant="default"
+          variant="destructive"
           color="black"
         >
           Reset
@@ -257,7 +274,6 @@ export default function Home() {
         onTouchEnd={stopDrawing}
       />
 
-      {/* Map through latexExpressions to display all results */}
       {latexExpressions.map((latex, index) => (
         <Draggable
           key={index}
